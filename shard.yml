@@ -1,0 +1,9 @@
+name: jsonfeed
+version: 0.1.0
+
+authors:
+  - Doug Everly <Doug@Everly.org>
+
+crystal: 0.21.0
+
+license: MIT
