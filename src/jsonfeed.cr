@@ -2,7 +2,16 @@ require "./jsonfeed/*"
 require "json"
 
 module JSONFeed
-  struct Author
+  module Builder
+    def build(**args)
+      new(**args).tap do |b|
+        yield b
+      end
+    end
+  end
+
+  class Author
+    extend JSONFeed::Builder
     JSON.mapping(
       name: {type: String, nilable: true},
       url: {type: String, nilable: true},
@@ -11,18 +20,31 @@ module JSONFeed
 
     def initialize(@name : String? = nil, @url : String? = nil, @avatar : String? = nil)
     end
+
+    def ==(other)
+      other &&
+        name == other.name &&
+        url == other.url &&
+        avatar == other.avatar
+    end
   end
 
-  struct Hub
+  class Hub
     JSON.mapping(
       _type: String,
       url: String,
     )
+
+    def ==(other)
+      _type == other._type &&
+        url == other.url
+    end
   end
 
   alias Hubs = Array(Hub)
 
-  struct Attachment
+  class Attachment
+    extend JSONFeed::Builder
     JSON.mapping(
       url: String,
       mime_type: String,
@@ -33,11 +55,20 @@ module JSONFeed
 
     def initialize(@url : String, @mime_type : String, @title : String?, @size_in_bytes : Int32?, @duration_in_seconds : Int32?)
     end
+
+    def ==(other)
+      url == other.url &&
+        mime_type == other.mime_type &&
+        title == other.title &&
+        size_in_bytes == other.size_in_bytes &&
+        duration_in_seconds == other.duration_in_seconds
+    end
   end
 
   alias Attachments = Array(Attachment)
 
-  struct Item
+  class Item
+    extend JSONFeed::Builder
     JSON.mapping(
       id: String,
       url: {type: String, nilable: true},
@@ -57,6 +88,31 @@ module JSONFeed
       attachments: {type: Array(Attachment), nilable: true},
     )
 
+    def ==(other)
+      id == other.id &&
+        url == other.url &&
+        external_url == other.external_url &&
+        title == other.title &&
+        content_html == other.content_html &&
+        content_text == other.content_text &&
+        summary == other.summary &&
+        image == other.image &&
+        banner == other.banner &&
+        date_published == other.date_published &&
+        date_modified == other.date_modified &&
+        author == other.author &&
+        tags == other.tags &&
+        attachments == other.attachments
+    end
+
+    def date_published=(date : String)
+      @date_published = Time::Format.new("%Y-%m-%dT%H:%M:%S%:z").parse(date)
+    end
+
+    def date_modified=(date : String)
+      @date_modified = Time::Format.new("%Y-%m-%dT%H:%M:%S%:z").parse(date)
+    end
+
     def initialize(@id : String, @url : String? = nil, @external_url : String? = nil, @title : String? = nil, @content_html : String? = nil, @content_text : String? = nil, @summary : String? = nil, @image : String? = nil, @banner : String? = nil, date_published : Time | String | Nil = nil, date_modified : Time | String | Nil = nil, @author : Author? = nil, @tags : Array(String)? = nil, @attachments : Attachments? = nil)
       @date_modified = case date_modified
                        when Time
@@ -75,7 +131,9 @@ module JSONFeed
 
   alias Items = Array(JSONFeed::Item)
 
-  struct Feed
+  class Feed
+    extend JSONFeed::Builder
+    # extend JSONFeed::Builder
     JSON.mapping(
       version: String,
       title: String,
@@ -92,6 +150,20 @@ module JSONFeed
     )
 
     def initialize(@version : String, @title : String, @home_page_url : String? = nil, @feed_url : String? = nil, @description : String? = nil, @user_comment : String? = nil, @next_url : String? = nil, @favicon : String? = nil, @author : Author? = nil, @expired : Bool? = false, @hub : Hubs? = nil, @items : Items = Items.new)
+    end
+
+    def ==(other)
+      version == other.version &&
+        title == other.title &&
+        home_page_url == home_page_url &&
+        feed_url == other.feed_url &&
+        user_comment == other.user_comment &&
+        next_url == other.next_url &&
+        favicon == other.favicon &&
+        author == other.author &&
+        expired == other.expired &&
+        hubs == other.hubs &&
+        items == other.items
     end
 
     def <<(item : Item)

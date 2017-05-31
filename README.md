@@ -32,6 +32,30 @@ pp feed
 
 ## Generating JSONFeed
 
+### Using the Builder
+```crystal
+require "jsonfeed"
+
+feed = JSONFeed::Feed.build(version: "https://jsonfeed.org/version/1", title: "Brent Simmons’s Microblog") do |feed|
+  feed.user_comment = "This is a microblog feed. You can add this to your feed reader using the following URL: https://example.org/feed.json"
+  feed.home_page_url = "https://example.org/"
+  feed.feed_url = "https://example.org/feed.json"
+  feed.author = JSONFeed::Author.build do |author|
+    author.name = "Brent Simmons"
+    author.url = "http://example.org/"
+    author.avatar = "https://example.org/avatar.png"
+  end
+  feed.items << JSONFeed::Item.build(id: "2347259", url: "https://example.org/2347259") do |item|
+    item.content_text = "Cats are neat. \n\nhttps://example.org/cats"
+    item.date_published = "2016-02-09T14:22:00-07:00"
+  end
+end
+
+puts feed.to_json
+
+```
+
+### Using the Initializer
 ```crystal
 
 require "jsonfeed"
@@ -54,7 +78,7 @@ puts feed.to_json
 ### TODO
 
 * Extensions not yet supported. Ideally would use https://github.com/crystal-lang/crystal/pull/4411.
-* Enforce `content_html` and `content_text`: one or both must be present.
+* Enforce `content_html` and `content_text`: one or both must be present
 * Create a builder for JSONFeed::Feed.
 
 ## Contributing
